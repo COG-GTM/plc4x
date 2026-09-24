@@ -19,6 +19,8 @@
 
 # Profinet
 
+For the code structure of this driver (classes, connection lifecycle, packet factory, discovery), see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Connection
 
 PR IO generally works via raw Ethernet communication, so in general the Source and Target MAC address are the only bits of information needed. 
