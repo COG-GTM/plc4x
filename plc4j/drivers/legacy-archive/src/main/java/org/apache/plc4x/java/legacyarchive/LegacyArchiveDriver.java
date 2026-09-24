@@ -30,6 +30,7 @@ import org.apache.plc4x.java.spi.drivers.ConnectionBase;
 import org.apache.plc4x.java.spi.drivers.DriverBase;
 import org.apache.plc4x.java.spi.transports.api.TransportInstance;
 import org.apache.plc4x.java.utils.auditlog.api.AuditLog;
+import org.apache.plc4x.java.utils.auditlog.api.config.AuditLogConfiguration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -93,12 +94,18 @@ public class LegacyArchiveDriver extends DriverBase {
 
         Path archiveDirectory = toPath(fileUrl, connectionString);
 
-        LegacyArchiveConfiguration configuration = new ConfigurationFactory()
+        ConfigurationFactory configurationFactory = new ConfigurationFactory();
+        LegacyArchiveConfiguration configuration = configurationFactory
             .createConfiguration(LegacyArchiveConfiguration.class, paramString);
         configuration.setArchiveDirectory(archiveDirectory);
 
-        return new LegacyArchiveConnection(archiveDirectory, configuration,
-            AuditLog.builder().withSource(getProtocolCode()).build());
+        AuditLogConfiguration auditLogConfiguration = configurationFactory
+            .createPrefixedConfiguration(AuditLogConfiguration.class, "log", paramString);
+
+        return new LegacyArchiveConnection(archiveDirectory, configuration, AuditLog.builder()
+            .withSource(getProtocolCode())
+            .withConfiguration(auditLogConfiguration)
+            .build());
     }
 
     private Path toPath(String fileUrl, String connectionString) throws PlcConnectionException {

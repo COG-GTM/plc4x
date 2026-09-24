@@ -70,12 +70,18 @@ public class MaintenanceReportParser {
             parseDouble(extract(text, HOURS_RUN_LABEL, fileName), HOURS_RUN_LABEL, fileName));
     }
 
+    /**
+     * Matches the label and its value on one and the same line: only horizontal whitespace is
+     * allowed around the colon, so a label left blank in the report fails here instead of
+     * swallowing the next labelled line as its value.
+     */
     private String extract(String text, String label, String fileName) throws LegacyArchiveFormatException {
-        Pattern pattern = Pattern.compile("^\\s*" + Pattern.quote(label) + "\\s*:\\s*(\\S.*?)\\s*$",
+        Pattern pattern = Pattern.compile("^[ \\t]*" + Pattern.quote(label) + "[ \\t]*:[ \\t]*(\\S.*?)[ \\t]*$",
             Pattern.MULTILINE);
         Matcher matcher = pattern.matcher(text);
         if (!matcher.find()) {
-            throw new LegacyArchiveFormatException(fileName + ": no '" + label + ":' line found in the report");
+            throw new LegacyArchiveFormatException(fileName + ": no '" + label + ":' line with a value found"
+                + " in the report");
         }
         return matcher.group(1);
     }

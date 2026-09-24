@@ -87,8 +87,10 @@ public final class FixtureGenerator {
         Files.write(targetDirectory.resolve("events-truncated.bin"), truncated(eventLog));
         Files.write(targetDirectory.resolve("events-count-mismatch.bin"), countMismatch());
         Files.write(targetDirectory.resolve("events-bad-reserved.bin"), badReserved());
-        writeMaintenanceReport(targetDirectory.resolve("maintenance-report.pdf"), true);
-        writeMaintenanceReport(targetDirectory.resolve("maintenance-report-empty.pdf"), false);
+        writeMaintenanceReport(targetDirectory.resolve("maintenance-report.pdf"), Variant.COMPLETE);
+        writeMaintenanceReport(targetDirectory.resolve("maintenance-report-empty.pdf"), Variant.NO_FIELDS);
+        writeMaintenanceReport(targetDirectory.resolve("maintenance-report-blank-asset-id.pdf"),
+            Variant.BLANK_ASSET_ID);
 
         System.out.println("Fixtures written to " + targetDirectory.toAbsolutePath());
     }
@@ -144,7 +146,14 @@ public final class FixtureGenerator {
         return eventLog(RECORDS.size(), RECORDS, 1);
     }
 
-    private static void writeMaintenanceReport(Path file, boolean withFields) throws IOException {
+    /** Which report body to write: all five fields, none of them, or an 'Asset ID:' left blank. */
+    enum Variant {
+        COMPLETE,
+        NO_FIELDS,
+        BLANK_ASSET_ID
+    }
+
+    private static void writeMaintenanceReport(Path file, Variant variant) throws IOException {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
@@ -157,8 +166,9 @@ public final class FixtureGenerator {
                 content.showText("Legacy Controller Maintenance Report");
                 content.newLine();
                 content.newLine();
-                if (withFields) {
-                    content.showText("Asset ID: " + ASSET_ID);
+                if (variant != Variant.NO_FIELDS) {
+                    content.showText((variant == Variant.BLANK_ASSET_ID)
+                        ? "Asset ID:" : ("Asset ID: " + ASSET_ID));
                     content.newLine();
                     content.showText("Last Service: " + LAST_SERVICE);
                     content.newLine();

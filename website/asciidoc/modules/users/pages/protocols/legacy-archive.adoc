@@ -50,10 +50,12 @@ For each tag id the log may hold several records; the record with the highest ti
 | `read`
 | Reads the parsed event-log and maintenance-report values. Addresses referring to a tag id that
 the log does not contain, or to maintenance fields when `pdf=false`, answer with `NOT_FOUND`.
+After the connection is closed, reads fail with a `PlcRuntimeException`.
 
 |
 | `ping`
-| Succeeds while the archive directory is still readable.
+| Succeeds while the archive path is still a directory; it answers `NOT_FOUND` once it is not,
+and `INVALID_ADDRESS` after the connection is closed. The artifacts themselves are not re-read.
 
 |===
 
@@ -159,7 +161,9 @@ fixed-width 24-byte records:
 
 The parser rejects, with a `LegacyArchiveFormatException` naming the file and the problem:
 a wrong magic, an unknown version, a `recordCount` that disagrees with the file length, a
-truncated trailing record, a non-zero reserved field, and unknown severity or quality codes.
+truncated trailing record, a non-zero reserved field, unknown severity or quality codes, and a
+timestamp whose high bit is set — the field is unsigned, while `java.time` is limited to signed
+epoch milliseconds, so such a value cannot be represented rather than silently wrapping.
 
 == PDF Maintenance Report
 

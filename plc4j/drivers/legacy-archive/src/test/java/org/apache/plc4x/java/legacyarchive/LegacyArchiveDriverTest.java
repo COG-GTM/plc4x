@@ -22,6 +22,7 @@ import org.apache.plc4x.java.api.PlcConnection;
 import org.apache.plc4x.java.api.PlcDriver;
 import org.apache.plc4x.java.api.PlcDriverManager;
 import org.apache.plc4x.java.api.exceptions.PlcConnectionException;
+import org.apache.plc4x.java.api.exceptions.PlcRuntimeException;
 import org.apache.plc4x.java.api.messages.PlcReadRequest;
 import org.apache.plc4x.java.api.messages.PlcReadResponse;
 import org.apache.plc4x.java.api.types.PlcResponseCode;
@@ -34,6 +35,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -147,6 +149,30 @@ class LegacyArchiveDriverTest {
         connection.close();
 
         assertFalse(connection.isConnected());
+    }
+
+    @Test
+    void rejectsReadsAndPingsAfterClose() throws Exception {
+        PlcConnection connection = openFixtureArchive("");
+        PlcReadRequest request = connection.readRequestBuilder()
+            .addTagAddress("value", "event/1/value")
+            .build();
+        connection.close();
+
+        ExecutionException readFailure = assertThrows(ExecutionException.class,
+            () -> request.execute().get());
+        assertInstanceOf(PlcRuntimeException.class, readFailure.getCause());
+        assertEquals(PlcResponseCode.INVALID_ADDRESS,
+            connection.ping().get().getResponseCode());
+    }
+
+    @Test
+    void reportsItsProtocolAndTransportIdentity() throws Exception {
+        try (PlcConnection connection = openFixtureArchive("")) {
+            assertEquals("legacy-archive", connection.getProtocolCode());
+            assertEquals("Legacy Controller Archive", connection.getProtocolName());
+            assertEquals("file", connection.getTransportCode());
+        }
     }
 
     private static PlcConnection openFixtureArchive(String params) throws Exception {

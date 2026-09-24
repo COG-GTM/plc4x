@@ -120,6 +120,14 @@ public class EventLogParser {
     private EventRecord parseRecord(ByteBuffer buffer, String fileName, int index)
         throws LegacyArchiveFormatException {
         long timestampMillis = buffer.getLong();
+        // The field is an unsigned 64 bit millisecond count, but everything downstream of here -
+        // Instant, LocalDateTime - is signed, so a value with the high bit set would silently
+        // surface as a pre-1970 date instead of the far-future instant it encodes.
+        if (timestampMillis < 0) {
+            throw new LegacyArchiveFormatException(fileName + ": record " + index + " has timestamp "
+                + Long.toUnsignedString(timestampMillis)
+                + " ms, which is beyond the representable epoch-millisecond range");
+        }
         long tagId = Integer.toUnsignedLong(buffer.getInt());
         int severityCode = Byte.toUnsignedInt(buffer.get());
         int qualityCode = Byte.toUnsignedInt(buffer.get());

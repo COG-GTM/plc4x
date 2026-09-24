@@ -19,6 +19,7 @@
 package org.apache.plc4x.java.legacyarchive.connection;
 
 import org.apache.plc4x.java.api.exceptions.PlcConnectionException;
+import org.apache.plc4x.java.api.exceptions.PlcRuntimeException;
 import org.apache.plc4x.java.api.messages.PlcPingRequest;
 import org.apache.plc4x.java.api.messages.PlcPingResponse;
 import org.apache.plc4x.java.api.messages.PlcReadRequest;
@@ -152,6 +153,30 @@ public class LegacyArchiveConnection extends ConnectionBase<LegacyArchiveConfigu
         return connected;
     }
 
+    /**
+     * {@link ConnectionBase} learns its identity from a package-private setter the transport-aware
+     * factory calls; this driver builds its connection directly, so the identity is stated here.
+     */
+    @Override
+    public String getProtocolCode() {
+        return "legacy-archive";
+    }
+
+    @Override
+    public String getProtocolName() {
+        return "Legacy Controller Archive";
+    }
+
+    @Override
+    public String getTransportCode() {
+        return "file";
+    }
+
+    @Override
+    public String getTransportName() {
+        return "Filesystem";
+    }
+
     @Override
     public void close() {
         connected = false;
@@ -175,12 +200,22 @@ public class LegacyArchiveConnection extends ConnectionBase<LegacyArchiveConfigu
 
     @Override
     protected CompletableFuture<PlcPingResponse> onPing(PlcPingRequest pingRequest) {
+        if (!connected) {
+            return CompletableFuture.completedFuture(
+                new DefaultPlcPingResponse(pingRequest, PlcResponseCode.INVALID_ADDRESS));
+        }
         return CompletableFuture.completedFuture(new DefaultPlcPingResponse(pingRequest,
             Files.isDirectory(archiveDirectory) ? PlcResponseCode.OK : PlcResponseCode.NOT_FOUND));
     }
 
     @Override
     protected CompletableFuture<PlcReadResponse> onRead(PlcReadRequest readRequest) {
+        if (!connected) {
+            CompletableFuture<PlcReadResponse> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new PlcRuntimeException(
+                "The connection to archive '" + archiveDirectory + "' is closed."));
+            return failed;
+        }
         Map<String, PlcResponseItem<PlcValue>> tags = new HashMap<>();
         for (String tagName : readRequest.getTagNames()) {
             // A tag the builder couldn't parse stays in the request with its error code and a

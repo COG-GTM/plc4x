@@ -21,6 +21,9 @@ package org.apache.plc4x.java.legacyarchive.parser;
 import org.apache.plc4x.java.legacyarchive.FixturePaths;
 import org.junit.jupiter.api.Test;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -103,6 +106,27 @@ class EventLogParserTest {
             () -> parser.parse(new byte[]{'E', 'V', 'L', 'G'}, "events.bin"));
 
         assertTrue(e.getMessage().contains("too short"), e.getMessage());
+    }
+
+    @Test
+    void rejectsATimestampBeyondTheRepresentableRange() {
+        ByteBuffer buffer = ByteBuffer.allocate(32).order(ByteOrder.LITTLE_ENDIAN);
+        buffer.put("EVLG".getBytes(StandardCharsets.US_ASCII));
+        buffer.putShort((short) 1);
+        buffer.putShort((short) 1);
+        buffer.putLong(-1L);  // all ones - the largest unsigned 64 bit millisecond count
+        buffer.putInt(1);
+        buffer.put((byte) 0);
+        buffer.put((byte) 2);
+        buffer.putShort((short) 0);
+        buffer.putDouble(12.5);
+        byte[] log = buffer.array();
+
+        LegacyArchiveFormatException e = assertThrows(LegacyArchiveFormatException.class,
+            () -> parser.parse(log, "events.bin"));
+
+        assertTrue(e.getMessage().contains("18446744073709551615"), e.getMessage());
+        assertTrue(e.getMessage().contains("representable epoch-millisecond range"), e.getMessage());
     }
 
     @Test

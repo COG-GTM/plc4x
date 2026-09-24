@@ -47,7 +47,15 @@ class MaintenanceReportParserTest {
         LegacyArchiveFormatException e = assertThrows(LegacyArchiveFormatException.class,
             () -> parser.parse(FixturePaths.resource("maintenance-report-empty.pdf")));
 
-        assertTrue(e.getMessage().contains("no 'Asset ID:' line found"), e.getMessage());
+        assertTrue(e.getMessage().contains("no 'Asset ID:' line"), e.getMessage());
+    }
+
+    @Test
+    void rejectsALabelLeftBlankInsteadOfTakingTheNextLineAsItsValue() {
+        LegacyArchiveFormatException e = assertThrows(LegacyArchiveFormatException.class,
+            () -> parser.parse(FixturePaths.resource("maintenance-report-blank-asset-id.pdf")));
+
+        assertTrue(e.getMessage().contains("no 'Asset ID:' line"), e.getMessage());
     }
 
 }
