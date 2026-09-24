@@ -105,6 +105,13 @@ public class LegacyArchiveConnection extends ConnectionBase<LegacyArchiveConfigu
 
     @Override
     protected void onConnect() throws PlcConnectionException {
+        // Nothing of a previous snapshot may survive a failed re-connect, so the state is dropped
+        // up front and only re-published once both artifacts have been read in full.
+        connected = false;
+        eventRecords = Collections.emptyList();
+        latestEventByTagId = Collections.emptyMap();
+        maintenanceReport = null;
+
         if (!Files.isDirectory(archiveDirectory)) {
             throw new PlcConnectionException("Archive directory '" + archiveDirectory + "' doesn't exist.");
         }
@@ -113,20 +120,21 @@ public class LegacyArchiveConnection extends ConnectionBase<LegacyArchiveConfigu
             throw new PlcConnectionException("Archive directory '" + archiveDirectory + "' contains no '"
                 + EventLogParser.EVENT_LOG_FILE_NAME + "'.");
         }
+        final List<EventRecord> records;
         try {
-            eventRecords = new EventLogParser().parse(eventLog);
+            records = new EventLogParser().parse(eventLog);
         } catch (IOException | LegacyArchiveFormatException e) {
             throw new PlcConnectionException("Unable to read the event log of archive '"
                 + archiveDirectory + "'.", e);
         }
         Map<Long, EventRecord> latest = new LinkedHashMap<>();
-        for (EventRecord record : eventRecords) {
+        for (EventRecord record : records) {
             latest.merge(record.tagId(), record,
                 (existing, candidate) -> (candidate.timestampMillis() >= existing.timestampMillis())
                     ? candidate : existing);
         }
-        latestEventByTagId = Collections.unmodifiableMap(latest);
 
+        MaintenanceReport parsedReport = null;
         if (getConfiguration().isPdf()) {
             Path report = archiveDirectory.resolve(MaintenanceReportParser.MAINTENANCE_REPORT_FILE_NAME);
             if (!Files.isRegularFile(report)) {
@@ -135,12 +143,16 @@ public class LegacyArchiveConnection extends ConnectionBase<LegacyArchiveConfigu
                     + "'. Pass 'pdf=false' to read an archive without a maintenance report.");
             }
             try {
-                maintenanceReport = new MaintenanceReportParser().parse(report);
+                parsedReport = new MaintenanceReportParser().parse(report);
             } catch (IOException | LegacyArchiveFormatException e) {
                 throw new PlcConnectionException("Unable to read the maintenance report of archive '"
                     + archiveDirectory + "'.", e);
             }
         }
+
+        eventRecords = records;
+        latestEventByTagId = Collections.unmodifiableMap(latest);
+        maintenanceReport = parsedReport;
 
         LOGGER.debug("Opened legacy archive '{}' with {} event record(s), maintenance report {}",
             archiveDirectory, eventRecords.size(), (maintenanceReport != null) ? "read" : "skipped");
