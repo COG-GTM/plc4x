@@ -28,6 +28,7 @@ import org.apache.plc4x.java.spi.config.Configuration;
 import org.apache.plc4x.java.spi.config.ConfigurationFactory;
 import org.apache.plc4x.java.spi.drivers.ConnectionBase;
 import org.apache.plc4x.java.spi.drivers.DriverBase;
+import org.apache.plc4x.java.spi.drivers.UnknownParameterReporter;
 import org.apache.plc4x.java.spi.transports.api.TransportInstance;
 import org.apache.plc4x.java.utils.auditlog.api.AuditLog;
 import org.apache.plc4x.java.utils.auditlog.api.config.AuditLogConfiguration;
@@ -101,6 +102,11 @@ public class LegacyArchiveDriver extends DriverBase {
 
         AuditLogConfiguration auditLogConfiguration = configurationFactory
             .createPrefixedConfiguration(AuditLogConfiguration.class, "log", paramString);
+
+        // No transport is involved, so only the driver's own and the audit log's parameters are
+        // known here; anything else is a misspelling the configuration factory would drop silently.
+        UnknownParameterReporter.report(getProtocolCode(), paramString, "file",
+            LegacyArchiveConfiguration.class, null);
 
         return new LegacyArchiveConnection(archiveDirectory, configuration, AuditLog.builder()
             .withSource(getProtocolCode())
