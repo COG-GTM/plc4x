@@ -189,10 +189,19 @@ public class LegacyArchiveConnection extends ConnectionBase<LegacyArchiveConfigu
         return "Filesystem";
     }
 
+    /**
+     * The audit log is built per connection by the driver, so closing it here is what releases its
+     * appenders - nothing else holds a reference once this connection is gone.
+     */
     @Override
-    public void close() {
+    public void close() throws Exception {
         connected = false;
-        fireConnectionStateChanged(ConnectionStateChangeType.DISCONNECTED, null);
+        try {
+            super.close();
+        } finally {
+            auditLog.close();
+            fireConnectionStateChanged(ConnectionStateChangeType.DISCONNECTED, null);
+        }
     }
 
     /** The records of the event log, in file order. Empty until the connection is opened. */

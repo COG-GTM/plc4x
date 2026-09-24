@@ -58,4 +58,12 @@ class MaintenanceReportParserTest {
         assertTrue(e.getMessage().contains("no 'Asset ID:' line"), e.getMessage());
     }
 
+    @Test
+    void rejectsANonFiniteHoursRunValue() {
+        LegacyArchiveFormatException e = assertThrows(LegacyArchiveFormatException.class,
+            () -> parser.parse(FixturePaths.resource("maintenance-report-nan-hours.pdf")));
+
+        assertTrue(e.getMessage().contains("'Hours Run' value 'NaN' is not a finite number"), e.getMessage());
+    }
+
 }

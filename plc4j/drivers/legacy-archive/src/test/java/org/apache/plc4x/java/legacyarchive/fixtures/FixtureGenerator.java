@@ -91,6 +91,8 @@ public final class FixtureGenerator {
         writeMaintenanceReport(targetDirectory.resolve("maintenance-report-empty.pdf"), Variant.NO_FIELDS);
         writeMaintenanceReport(targetDirectory.resolve("maintenance-report-blank-asset-id.pdf"),
             Variant.BLANK_ASSET_ID);
+        writeMaintenanceReport(targetDirectory.resolve("maintenance-report-nan-hours.pdf"),
+            Variant.NAN_HOURS);
 
         System.out.println("Fixtures written to " + targetDirectory.toAbsolutePath());
     }
@@ -146,11 +148,15 @@ public final class FixtureGenerator {
         return eventLog(RECORDS.size(), RECORDS, 1);
     }
 
-    /** Which report body to write: all five fields, none of them, or an 'Asset ID:' left blank. */
+    /**
+     * Which report body to write: all five fields, none of them, an 'Asset ID:' left blank, or
+     * 'Hours Run:' carrying a non-finite value.
+     */
     enum Variant {
         COMPLETE,
         NO_FIELDS,
-        BLANK_ASSET_ID
+        BLANK_ASSET_ID,
+        NAN_HOURS
     }
 
     private static void writeMaintenanceReport(Path file, Variant variant) throws IOException {
@@ -176,7 +182,7 @@ public final class FixtureGenerator {
                     content.newLine();
                     content.showText("Next Due: " + NEXT_DUE);
                     content.newLine();
-                    content.showText("Hours Run: " + HOURS_RUN);
+                    content.showText("Hours Run: " + ((variant == Variant.NAN_HOURS) ? "NaN" : HOURS_RUN));
                 } else {
                     content.showText("This report carries none of the labelled fields.");
                 }

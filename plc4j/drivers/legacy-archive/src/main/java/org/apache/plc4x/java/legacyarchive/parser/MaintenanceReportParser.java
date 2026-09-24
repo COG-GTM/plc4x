@@ -97,7 +97,13 @@ public class MaintenanceReportParser {
 
     private double parseDouble(String value, String label, String fileName) throws LegacyArchiveFormatException {
         try {
-            return Double.parseDouble(value);
+            double parsed = Double.parseDouble(value);
+            // Double.parseDouble also accepts NaN and Infinity, neither of which is an hour count.
+            if (!Double.isFinite(parsed)) {
+                throw new LegacyArchiveFormatException(fileName + ": '" + label + "' value '" + value
+                    + "' is not a finite number");
+            }
+            return parsed;
         } catch (NumberFormatException e) {
             throw new LegacyArchiveFormatException(fileName + ": '" + label + "' value '" + value
                 + "' is not a number", e);

@@ -33,7 +33,8 @@ Ingestion happens once, when the connection is established:
 
 . `connect()` checks that the configured directory exists and holds `events.bin`.
 . The event log is parsed in full. A malformed log fails the connect with a
-`LegacyArchiveFormatException` rather than surfacing later as bad reads.
+`PlcConnectionException` carrying the `LegacyArchiveFormatException` as its cause, rather than
+surfacing later as bad reads.
 . Unless `pdf=false`, `maintenance-report.pdf` is required and parsed as well.
 . Reads are then served from the in-memory snapshot, so they are cheap and stable for the
 lifetime of the connection. Re-open the connection to pick up newer artifacts.
@@ -159,7 +160,8 @@ fixed-width 24-byte records:
 |value |float64 |16 |Measured value
 |===
 
-The parser rejects, with a `LegacyArchiveFormatException` naming the file and the problem:
+The parser rejects, with a `LegacyArchiveFormatException` naming the file and the problem (the
+connection wraps it in a `PlcConnectionException`):
 a wrong magic, an unknown version, a `recordCount` that disagrees with the file length, a
 truncated trailing record, a non-zero reserved field, unknown severity or quality codes, and a
 timestamp whose high bit is set — the field is unsigned, while `java.time` is limited to signed

@@ -65,3 +65,5 @@ incomplete.
 
 `maintenance-report-blank-asset-id.pdf`:: Same as the valid report, except `Asset ID:` carries no
 value.
+
+`maintenance-report-nan-hours.pdf`:: Same as the valid report, except `Hours Run:` reads `NaN`.
