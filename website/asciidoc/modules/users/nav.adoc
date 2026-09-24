@@ -56,6 +56,7 @@
 *** xref:protocols/genericcan.adoc[]
 *** xref:protocols/iec-60870.adoc[]
 *** xref:protocols/knxnetip.adoc[]
+*** xref:protocols/legacy-archive.adoc[]
 *** xref:protocols/logix.adoc[]
 *** xref:protocols/modbus.adoc[]
 *** xref:protocols/opcua.adoc[]

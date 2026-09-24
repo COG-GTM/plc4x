@@ -1,0 +1,180 @@
+//
+//  Licensed to the Apache Software Foundation (ASF) under one or more
+//  contributor license agreements.  See the NOTICE file distributed with
+//  this work for additional information regarding copyright ownership.
+//  The ASF licenses this file to You under the Apache License, Version 2.0
+//  (the "License"); you may not use this file except in compliance with
+//  the License.  You may obtain a copy of the License at
+//
+//      https://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
+:imagesdir: ../../images/users/protocols
+:icons: font
+
+= Legacy Archive
+
+The legacy-archive driver ingests the two offline artifacts a legacy controller leaves behind
+instead of talking to a device: a proprietary binary event log (`events.bin`) and a one-page PDF
+maintenance report (`maintenance-report.pdf`). Both live in one directory, and the driver exposes
+their contents through the ordinary PLC4X read API, so downstream consumers see `PlcValue`
+instances exactly as they would from any other driver.
+
+Java only; the module is `plc4j-driver-legacy-archive`.
+
+== Ingestion stage
+
+Ingestion happens once, when the connection is established:
+
+. `connect()` checks that the configured directory exists and holds `events.bin`.
+. The event log is parsed in full. A malformed log fails the connect with a
+`LegacyArchiveFormatException` rather than surfacing later as bad reads.
+. Unless `pdf=false`, `maintenance-report.pdf` is required and parsed as well.
+. Reads are then served from the in-memory snapshot, so they are cheap and stable for the
+lifetime of the connection. Re-open the connection to pick up newer artifacts.
+
+For each tag id the log may hold several records; the record with the highest timestamp wins.
+
+== Supported Operations
+
+[cols="2,2a,5a"]
+|===
+|Name |Value |Description
+
+|
+| `read`
+| Reads the parsed event-log and maintenance-report values. Addresses referring to a tag id that
+the log does not contain, or to maintenance fields when `pdf=false`, answer with `NOT_FOUND`.
+
+|
+| `ping`
+| Succeeds while the archive directory is still readable.
+
+|===
+
+Writing, subscribing, browsing and discovery are not supported — the artifacts are read-only
+records of something that already happened.
+
+== Connection String
+
+----
+legacy-archive:file:///path/to/archive/dir
+----
+
+The URL carries no transport: the `file` URI points straight at the directory holding the two
+artifacts. One optional parameter is supported:
+
+[cols="2,1,5"]
+|===
+|Name |Default |Description
+
+|`pdf`
+|`true`
+|Whether to read `maintenance-report.pdf`. Set it to `false` for archives that only contain an
+event log; `maintenance/*` addresses then answer with `NOT_FOUND`.
+|===
+
+An example:
+----
+legacy-archive:file:///var/spool/controller-a/archive?pdf=false
+----
+
+== Tag Syntax
+
+[cols="3,2,4"]
+|===
+|Address |PlcValue type |Description
+
+|`event/<tagId>/value`
+|`PlcLREAL`
+|The measured value of the newest record for that tag id.
+
+|`event/<tagId>/severity`
+|`PlcUSINT`
+|`0` info, `1` warn, `2` alarm, `3` fault.
+
+|`event/<tagId>/quality`
+|`PlcUSINT`
+|`0` bad, `1` uncertain, `2` good.
+
+|`event/<tagId>/timestamp`
+|`PlcDATE_AND_TIME`
+|Record timestamp, interpreted as UTC.
+
+|`maintenance/assetId`
+|`PlcSTRING`
+|The `Asset ID:` line of the report.
+
+|`maintenance/lastService`
+|`PlcDATE`
+|The `Last Service:` line.
+
+|`maintenance/technician`
+|`PlcSTRING`
+|The `Technician:` line.
+
+|`maintenance/nextDue`
+|`PlcDATE`
+|The `Next Due:` line.
+
+|`maintenance/hoursRun`
+|`PlcLREAL`
+|The `Hours Run:` line.
+|===
+
+`<tagId>` is the unsigned 32-bit tag id as it appears in the event log.
+
+== Binary Event Log Format
+
+`events.bin` is little-endian throughout. An eight-byte header is followed by `recordCount`
+fixed-width 24-byte records:
+
+.Header
+[cols="2,1,4"]
+|===
+|Field |Type |Value
+
+|magic |4 bytes ASCII |`EVLG`
+|version |uint16 |`1`
+|recordCount |uint16 |Number of records that follow
+|===
+
+.Record (24 bytes)
+[cols="2,1,1,4"]
+|===
+|Field |Type |Offset |Description
+
+|timestampMillis |uint64 |0 |Milliseconds since the Unix epoch, UTC
+|tagId |uint32 |8 |Tag the record belongs to
+|severity |uint8 |12 |0 info, 1 warn, 2 alarm, 3 fault
+|quality |uint8 |13 |0 bad, 1 uncertain, 2 good
+|reserved |uint16 |14 |Must be `0`
+|value |float64 |16 |Measured value
+|===
+
+The parser rejects, with a `LegacyArchiveFormatException` naming the file and the problem:
+a wrong magic, an unknown version, a `recordCount` that disagrees with the file length, a
+truncated trailing record, a non-zero reserved field, and unknown severity or quality codes.
+
+== PDF Maintenance Report
+
+`maintenance-report.pdf` is a one-page report whose text is extracted with Apache PDFBox. Five
+labelled lines are read; each must be present:
+
+* `Asset ID:` — free text
+* `Last Service:` — ISO date, `yyyy-MM-dd`
+* `Technician:` — free text
+* `Next Due:` — ISO date, `yyyy-MM-dd`
+* `Hours Run:` — decimal number
+
+== Relationship to the existing drivers
+
+This driver is entirely self-contained: it lives in the new `plc4j/drivers/legacy-archive` module
+and brings its own parsers. No existing driver module, no existing parsing code and no shared SPI
+class was modified to add it. Outside the module, only `plc4j/drivers/all/pom.xml` gained a
+runtime dependency on the new artifact, plus this page and its navigation entry.

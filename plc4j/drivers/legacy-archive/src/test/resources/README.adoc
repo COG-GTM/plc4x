@@ -1,0 +1,61 @@
+////
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       https://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+////
+
+= Legacy archive test fixtures
+
+The binary fixtures in this directory are generated, not hand-written, and are excluded from the
+apache-rat license check in this module's `pom.xml` because they can't carry a license header.
+
+Regenerate them with:
+
+[source,shell]
+----
+mvn -pl plc4j/drivers/legacy-archive -am -P with-java test-compile
+mvn -pl plc4j/drivers/legacy-archive -P with-java exec:java \
+    -Dexec.classpathScope=test \
+    -Dexec.mainClass=org.apache.plc4x.java.legacyarchive.fixtures.FixtureGenerator \
+    -Dexec.args=src/test/resources
+----
+
+or by running `FixtureGenerator` (in `src/test/java`) from an IDE with the module's test classpath
+and `src/test/resources` as its argument. The generator pins every input — the base timestamp, the
+field values and the PDF creation date, producer and title — so repeated runs produce identical
+bytes.
+
+== Files
+
+`events.bin`:: Well-formed event log, version 1, six records. Timestamps start at
+`2026-03-17T08:00:00Z` and advance one second per record; tag ids are 1, 2, 3, 4, 1, 5; the four
+severities info/warn/alarm/fault all occur, and record 3 (tag id 3) has bad quality. Tag id 1
+appears twice so the "latest record wins" behaviour of the connection is covered.
+
+`events-bad-magic.bin`:: `events.bin` with the first magic byte replaced by `X`.
+
+`events-bad-version.bin`:: `events.bin` with the version field set to 9.
+
+`events-truncated.bin`:: `events.bin` with the last eight bytes cut off, so the trailing record is
+incomplete.
+
+`events-count-mismatch.bin`:: Header announcing six records while only five are present.
+
+`events-bad-reserved.bin`:: Otherwise well-formed log whose records carry a reserved field of 1.
+
+`maintenance-report.pdf`:: One-page report carrying the five labelled lines `Asset ID: PUMP-014`,
+`Last Service: 2026-03-17`, `Technician: A. Turing`, `Next Due: 2026-09-17` and
+`Hours Run: 18234.5`.
+
+`maintenance-report-empty.pdf`:: One-page report with the heading but none of the labelled fields.
