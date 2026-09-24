@@ -86,7 +86,8 @@ graph TD
   handles over `Pcaps.findAllDevs()` via `channel/ProfinetChannel` and wraps a
   `discovery/ProfinetDiscoverer` in a `DefaultPlcDiscoveryRequest.Builder`.
 
-`ProfinetDriver.MAC_ADDRESS` is the pattern used to recognise a MAC address in a connection string.
+`ProfinetDriver.MAC_ADDRESS` is a MAC-address pattern declared on the driver but currently unused -
+the target MAC is taken from the raw-socket transport's `remote-address` parameter.
 
 ## 3. Configuration - `config/ProfinetConfiguration`
 
@@ -154,6 +155,10 @@ An entirely asynchronous `CompletableFuture<Void>` chain:
    rejects the call, the already-configured DAP is used, and if there is none the handshake fails
    with "please provide the 'dap-id' parameter". On success `indexModulesFromRealIdentification(...)`
    runs, and a still-unresolved DAP fails with the auto-detect variant of the same message.
+
+Note that only the success path fills `moduleIndex`/`submoduleIndex`. If the device rejects the
+`RealIdentificationData` read, the connection comes up on the configured `dap-id` alone with both
+indices empty, so `onBrowse(...)` returns nothing and slot/subslot subscriptions find no submodule.
 
 ### `indexModulesFromRealIdentification(...)`
 
@@ -258,8 +263,11 @@ no DAP resolved it fails immediately. Otherwise:
 
 `ProfinetMessageCodec extends MessageCodecBase<Ethernet_Frame>` and is deliberately thin. PROFINET
 runs directly over Ethernet (EtherType `0x8892` for PN-DCP, plus IPv4/UDP for the DCE-RPC based
-PN-CM traffic), and the raw-socket transport configured with `include-ethernet-header=true`
-delivers each captured frame as one self-contained block and accepts pre-built frames on write.
+PN-CM traffic). The driver builds and consumes complete Ethernet frames, so the transport has to be
+configured accordingly: `include-ethernet-header=true` (it defaults to `false`) makes the raw-socket
+transport deliver each captured frame as one self-contained block and accept pre-built frames on
+write, and `RawSocketTransportConfiguration` additionally marks `remote-address` (the device MAC)
+and `protocol-id` (the EtherType) as `@Required`.
 So the codec is a 1:1 wrapper around `Ethernet_Frame.staticParse(readBuffer)`:
 
 - `getMinimumHeaderSize()` returns `14` (dst + src + ethertype) - just enough for the base class to
