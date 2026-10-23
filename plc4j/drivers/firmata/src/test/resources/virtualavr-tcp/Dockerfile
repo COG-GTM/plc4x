@@ -40,6 +40,9 @@ RUN curl -fsSL "${FIRMATA_REPO}/${FIRMATA_REF}/examples/StandardFirmata/Standard
 # installCommand=false), so install them at image build time.
 RUN arduino-cli lib install Servo Firmata
 
+# virtualavr.js expects a compiled Intel HEX file, so compile the sketch once at image build time.
+RUN virtualavr-compile-arduino /sketch/sketch.ino /sketch/sketch.hex
+
 # The upstream pfichtner/virtualavr HEALTHCHECK pings ws://localhost:8080,
 # which only starts when the simulator starts, which only happens on the
 # first TCP accept — so the inherited healthcheck would stay perpetually
@@ -59,4 +62,4 @@ EXPOSE 3030
 # what made the container exit cleanly within seconds under Testcontainers'
 # default log-streaming attach during earlier testing).
 ENTRYPOINT ["/bin/sh", "-c", \
-            "while true; do socat TCP-LISTEN:3030,reuseaddr EXEC:'node /app/virtualavr.js sketch.ino',pty,rawer,fdin=3,fdout=4; sleep 1; done </dev/null"]
+            "while true; do socat TCP-LISTEN:3030,reuseaddr EXEC:'node /app/virtualavr.js /sketch/sketch.hex',pty,rawer,fdin=3,fdout=4; sleep 1; done </dev/null"]
