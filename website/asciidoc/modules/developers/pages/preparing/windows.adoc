@@ -48,11 +48,11 @@ Checking:
 
  java --version
 
-If you get output successfully, check that the version reported is at least Java 11.
+If you get output successfully, check that the version reported is at least Java 25.
 If you need to install or update Java.
 Unfortunately, this doesn't seem available via Chocolatey, but needs to be installed directly from a distribution.
 
-For Oracles OpenJDK 21 this would be from here: https://learn.microsoft.com/de-de/java/openjdk/download
+For Microsoft's OpenJDK 25 this would be from here: https://learn.microsoft.com/de-de/java/openjdk/download
 If you are using a Windows VM on `aarch64` (Apple M1 or M2 virtual machine), the download available from Microsoft build seems to be one of the few options you have.
 When installing, make sure to select the option to configure the "JAVA_HOME" environment variable (deactivated per default).
 

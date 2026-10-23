@@ -53,7 +53,7 @@ Checking:
 
  java --version
 
-If you get successful output indicating at least Java 11, you don't need to do anything.
+If you get successful output indicating at least Java 25, you don't need to do anything.
 
 Apt based systems:
 
