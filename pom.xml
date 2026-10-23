@@ -84,7 +84,7 @@
   </mailingLists>
 
   <properties>
-    <java.version>21</java.version>
+    <java.version>25</java.version>
 
     <!-- Declared so ${skipTests} always resolves; surefire reads the same property, so -DskipTests
          still works exactly as before. -->
@@ -979,13 +979,13 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>[4.0.0-rc-5,)</version>
+                  <version>[4.0.0-rc-7,)</version>
                 </requireMavenVersion>
               </rules>
               <fail>true</fail>
             </configuration>
           </execution>
-          <!-- Ensure dependencies are compatible with Java 21 -->
+          <!-- Ensure dependencies are compatible with the Java baseline (java.version) -->
           <execution>
             <id>enforce-java-compatability</id>
             <goals>
@@ -994,7 +994,7 @@
             <configuration>
               <rules>
                 <enforceBytecodeVersion>
-                  <maxJdkVersion>21</maxJdkVersion>
+                  <maxJdkVersion>${java.version}</maxJdkVersion>
                 </enforceBytecodeVersion>
               </rules>
             </configuration>
@@ -1135,7 +1135,7 @@
         <plugin>
           <groupId>org.apache.karaf.tooling</groupId>
           <artifactId>karaf-maven-plugin</artifactId>
-          <version>4.4.11</version>
+          <version>4.4.12</version>
         </plugin>
 
         <plugin>
