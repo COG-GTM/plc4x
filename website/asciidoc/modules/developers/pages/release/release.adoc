@@ -100,12 +100,12 @@ If you happen to have multiple keys, adding the following profile to your `setti
       </properties>
     </profile>
 
-The Java version the release is built with is not yours to pick: every Maven build the release scripts run happens inside the container described by `tools/docker-compose.yaml`, and its image (`azul/zulu-openjdk:21`) pins it to `Java 21`.
+The Java version the release is built with is not yours to pick: every Maven build the release scripts run happens inside the container described by `tools/docker-compose.yaml`, and its image (`azul/zulu-openjdk:25`) pins it to `Java 25`.
 That is the whole point of the reference machine - the artifacts must not depend on what you happen to have installed.
 
-On the host you still need a `Java 21` JDK, because the prerequisite check of the build requires at least that version, and the scripts run Maven on the host for the steps that do not belong in the container.
+On the host you still need a `Java 25` JDK, because the prerequisite check of the build requires at least that version, and the scripts run Maven on the host for the steps that do not belong in the container.
 
-The minimum Maven version is `4.0.0-rc-5`, which the root `pom.xml` enforces.
+The minimum Maven version is `4.0.0-rc-7`, which the root `pom.xml` enforces.
 Ideally use the Maven-Wrapper, which pins exactly that version, so the question does not come up.
 
 [NOTE]

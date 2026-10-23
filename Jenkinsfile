@@ -45,7 +45,7 @@ pipeline {
 
     tools {
         maven 'maven_3_latest'
-        jdk 'jdk_21_latest'
+        jdk 'jdk_25_latest'
     }
 
     options {

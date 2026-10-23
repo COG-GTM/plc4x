@@ -403,7 +403,7 @@ follows.
 
 - **Operating system**: Linux primary (Ubuntu / RHEL family),
   Windows / macOS supported for Java; ARM-and-x86 supported.
-  Java 21 minimum, tested up to Java 24 *(documented: `README.md`)*.
+  Java 25 minimum (`plc4j-api` compiled for Java 17) *(documented: `README.md`)*.
 - **Java runtime**: HotSpot or OpenJ9; the build requires
   `--add-exports jdk.compiler/...` for code generation but the
   runtime artifact does not *(documented: `README.md`)*.

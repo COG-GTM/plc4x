@@ -40,9 +40,9 @@ These greatly depend on which parts you want to build.
 If you're just building the `Java` modules, these probably have the least demanding requirements.
 Also, should the `Go` parts generally work without any additional installations as the maven build should automatically pull the required packages.
 
-In order to build all Java parts of `PLC4X` you are required to have at least `Java 11` installed on your machine.
+In order to build all Java parts of `PLC4X` you are required to have at least `Java 25` installed on your machine.
 
-TIP: We have tested the build with Java 11 up to Java 21 (Latest version at the time of writing this document).
+TIP: The build requires Java 25 (the current LTS) and is tested with it.
 
 If a new version comes out, please give us a little time to verify and handle any related issues.
 We'll probably fix them as soon as possible.
