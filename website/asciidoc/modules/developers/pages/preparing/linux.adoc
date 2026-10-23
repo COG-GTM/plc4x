@@ -50,11 +50,11 @@ Checking:
 
  java --version
 
-If you get output successfully indicating at least Java 11, you don't need to do anything.
+If you get output successfully indicating at least Java 25, you don't need to do anything.
 
 Apt-based systems:
 
- sudo apt install openjdk-21-jdk
+ sudo apt install openjdk-25-jdk
 
 == Optional and other language support
 
@@ -78,7 +78,7 @@ However, the java process can be granted permission to do so by executing the fo
 `/path/to/java` however needs to be a real file and not a symlink.
 So on my Ubuntu 22.04 system, where I installed java as described above, the command is as follows:
 
- sudo setcap cap_net_raw,cap_net_admin=eip /usr/lib/jvm/java-21-openjdk-arm64/bin/java
+ sudo setcap cap_net_raw,cap_net_admin=eip /usr/lib/jvm/java-25-openjdk-arm64/bin/java
 
 Sometimes I had to set the uid to execute the java executable with the permissions of the owner (root) ... However, this is a quite suboptimal solution.
 

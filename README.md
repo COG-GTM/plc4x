@@ -89,7 +89,7 @@ the language of choice.
 
 ### Java
 
-NOTE: Currently the minimum Java version is `Java 21`, and we have tested it up to `Java 24`. 
+NOTE: Currently the minimum Java version is `Java 25`. The `plc4j-api` module is still compiled for `Java 17`. 
 The project is currently split up into three repositories, the `plc4x`, `plc4x-build-tools` and `plc4x-extras` repository.  
 To be able to build all parts of the `plc4x-extras` repository, at least `Java 21` is required.
 
@@ -102,7 +102,7 @@ See the PLC4J user guide on the website to start using PLC4X in your Java applic
 
 Currently, the project is configured to require the following software:
 
-1. Java 21 JDK: For running Maven in general as well as compiling the Java modules `JAVA_HOME` configured to point to that.
+1. Java 25 JDK: For running Maven in general as well as compiling the Java modules `JAVA_HOME` configured to point to that.
 2. Git (even when working on the source distribution)
 3. (Optional, for running all tests) `libpcap/Npcap` for raw socket tests in Java or use of `passive-mode` drivers
 4. (Optional, for running all tests) `Docker` for running some tests making use of `Testcontainers`
@@ -161,7 +161,7 @@ The `out` directory however is excluded per default from the assembly descriptor
 
 ### Getting Started
 
-You must have at least Java 21 installed on your system and connectivity to Maven Central for downloading external third party dependencies. 
+You must have at least Java 25 installed on your system and connectivity to Maven Central for downloading external third party dependencies. 
 Maven 4.0.0-rc-5 or newer is required to build, so be sure it's installed and available on your system (the bundled Maven-Wrapper takes care of this automatically).
 
 NOTE: There is a convenience Maven-Wrapper installed in the repo, when used, this automatically downloads and installs Maven. 

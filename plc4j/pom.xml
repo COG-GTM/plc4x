@@ -204,7 +204,7 @@
       </plugin>
 
       <!--
-        As our libraries should be consumable on Java 21, downgrade the compiler settings.
+        Compile against the Java baseline set by the java.version property (Java 25); plc4j-api overrides this with release 17.
       -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
