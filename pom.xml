@@ -85,6 +85,8 @@
 
   <properties>
     <java.version>21</java.version>
+    <!-- JDK lines with a fix for CVE-2026-114938 (Java4Shell); 22-24 and 26 are EOL without one -->
+    <java4shell.fixed-jdk-versions>[21.0.13.1,22),[25.0.5.1,26),[27.0.1.1,)</java4shell.fixed-jdk-versions>
 
     <!-- Declared so ${skipTests} always resolves; surefire reads the same property, so -DskipTests
          still works exactly as before. -->
@@ -981,6 +983,22 @@
                 <requireMavenVersion>
                   <version>[4.0.0-rc-5,)</version>
                 </requireMavenVersion>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+          <!-- Refuse to build on a JDK affected by CVE-2026-114938 (Java4Shell, java.util.Base64) -->
+          <execution>
+            <id>enforce-fixed-jdk</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>${java4shell.fixed-jdk-versions}</version>
+                  <message>This JDK is affected by CVE-2026-114938 (Java4Shell). Use 21.0.13.1+, 25.0.5.1+ or 27.0.1.1+.</message>
+                </requireJavaVersion>
               </rules>
               <fail>true</fail>
             </configuration>
