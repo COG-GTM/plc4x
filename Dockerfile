@@ -20,7 +20,8 @@
 # This is the image we'll use to execute the build (and give it the name 'build').
 # (This image is based on Ubuntu)
 # Fixed version of this in order to have a fixed JDK version
-FROM azul/zulu-openjdk:21 as build
+# (21.0.13.1 or later is required: CVE-2026-114938 / Java4Shell)
+FROM azul/zulu-openjdk:21.0.13.1-21.54 as build
 
 # Install some stuff we need to run the build
 RUN apt update -y

@@ -32,13 +32,14 @@
 
 ARG MILO_VERSION=0.6.16
 
-FROM eclipse-temurin:21-jdk AS build
+# Exact fixed JDK build (21.0.13.1 or later is required: CVE-2026-114938 / Java4Shell)
+FROM eclipse-temurin:21.0.13.1_2-jdk AS build
 ARG MILO_VERSION
 ADD "https://repo1.maven.org/maven2/org/eclipse/milo/server-examples/${MILO_VERSION}/server-examples-${MILO_VERSION}.jar" /opt/milo/server-examples.jar
 COPY src /src
 RUN javac -nowarn -cp /opt/milo/server-examples.jar -d /opt/milo/classes $(find /src -name '*.java')
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21.0.13.1_2-jre
 COPY --from=build /opt/milo /opt/milo
 
 # The server binds this port and also advertises its endpoints on it, so the test container
